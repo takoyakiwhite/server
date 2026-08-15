@@ -35,7 +35,10 @@ const track = async (info) => {
 		return Promise.reject();
 	}
 
-	return jsonBody.data.url;
+	return {
+		url: jsonBody.data.url,
+		level: jsonBody.data.level || null,
+	};
 };
 
 const cs = getManagedCacheStorage('provider/nextmusic');

@@ -44,3 +44,5 @@ jobs:
           git add src/hook.js
           git commit -m "fix: preserve NextMusic audio level"
           git push
+
+# trigger: 2026-08-15T00:00:01Z

@@ -1,5 +1,6 @@
-const DEFAULT_SOURCE = ['kugou', 'bodian', 'migu', 'ytdlp'];
+const DEFAULT_SOURCE = ['nextmusic', 'kugou', 'bodian', 'migu', 'ytdlp'];
 const PROVIDERS = {
+	nextmusic: require('./provider/nextmusic'),
 	qq: require('./provider/qq'),
 	kugou: require('./provider/kugou'),
 	kuwo: require('./provider/kuwo'),

@@ -27,7 +27,7 @@ const headerReferer = new Map([
 ]);
 
 /**
- * @typedef {{ size: number, br: number | null, url: string | null, md5: string | null, source: string }} AudioData
+ * @typedef {{ size: number, br: number | null, url: string | null, md5: string | null, level?: string | null, source: string }} AudioData
  */
 
 /**
@@ -40,11 +40,21 @@ const headerReferer = new Map([
 async function getAudioFromSource(source, info) {
 	logger.debug({ source, info }, 'Getting the audio...');
 	// Check if this song is available in the specified source.
-	const audioData = await providers[source].check(info);
-	if (!audioData) throw new SongNotAvailable(source);
+	const providerResult = await providers[source].check(info);
+	if (!providerResult) throw new SongNotAvailable(source);
 
-	// Get the url from the song data.
-	const song = await check(audioData);
+	// Providers normally return a URL. Providers that expose additional
+	// metadata may return { url, level } while this matcher still inspects
+	// the actual audio URL for bitrate, size and md5.
+	const providerUrl =
+		typeof providerResult === 'string' ? providerResult : providerResult.url;
+	const level =
+		typeof providerResult === 'string' ? null : providerResult.level || null;
+	if (typeof providerUrl !== 'string' || !providerUrl)
+		throw new IncompleteAudioData('provider did not return a valid audio URL.');
+
+	// Get the URL's actual audio metadata.
+	const song = await check(providerUrl);
 	logger.debug(song, 'The matched song is:');
 	if (!song || typeof song.url !== 'string')
 		throw new IncompleteAudioData(
@@ -54,6 +64,7 @@ async function getAudioFromSource(source, info) {
 	logger.debug({ source, info }, 'The audio matched!');
 	return {
 		...song,
+		level,
 		source,
 	};
 }
@@ -137,7 +148,7 @@ async function match(id, source, data) {
 /**
  * Check and get the audio info of URL.
  * @param url The URL to be fetched.
- * @return {Promise<AudioData>} The parsed audio data.
+ * @return {Promise<AudioData>}
  */
 async function check(url) {
 	const isHost = isHostWrapper(url);

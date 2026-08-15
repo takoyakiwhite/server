@@ -335,7 +335,7 @@ hook.request.before = (ctx) => {
 			path: url.path
 				.replace(/^\/weapi\//, '/api/')
 				.split('?')
-				.shift() // remove the query parameters
+				.shift()
 				.replace(/\/\d*$/, ''),
 		};
 	} else if (req.url.includes('package')) {
@@ -348,9 +348,6 @@ hook.request.before = (ctx) => {
 			req.headers['cookie'] = null;
 			ctx.package = { id };
 			ctx.decision = 'proxy';
-			// if (url.href.includes('google'))
-			// 	return request('GET', req.url, req.headers, null, parse('http://127.0.0.1:1080'))
-			// 	.then(response => (ctx.res.writeHead(response.statusCode, response.headers), response.pipe(ctx.res)))
 		} catch (error) {
 			ctx.error = error;
 			ctx.decision = 'close';
@@ -388,7 +385,6 @@ hook.request.after = (ctx) => {
 						patch(crypto.xeapi.decrypt(buffer).toString())
 					);
 				} else if (netease.e_r) {
-					// eapi's e_r is true, needs to be encrypted
 					netease.jsonBody = JSON.parse(
 						patch(crypto.eapi.decrypt(buffer).toString())
 					);
@@ -415,7 +411,7 @@ hook.request.after = (ctx) => {
 							isSignDeduct: false,
 							isSignIapDeduct: false,
 						};
-						const vipLevel = 7; // ? months
+						const vipLevel = 7;
 						if (
 							info &&
 							(LOCAL_VIP_UID.length === 0 ||
@@ -526,7 +522,6 @@ hook.request.after = (ctx) => {
 						)
 							value['pl'] = value['playMaxbr'];
 						if ('sp' in value && 'st' in value && 'subp' in value) {
-							// batch modify
 							value['sp'] = 7;
 							value['st'] = 0;
 							value['subp'] = 1;
@@ -563,7 +558,7 @@ hook.request.after = (ctx) => {
 					/([^\\]"\s*:\s*)"(\d{16,})L"(\s*[}|,])/g,
 					'$1$2$3'
 				); // for js precision
-				proxyRes.body = netease.e_r // encrypted eapi/xeapi responses
+				proxyRes.body = netease.e_r
 					? crypto.eapi.encrypt(Buffer.from(body))
 					: body;
 			})
@@ -744,9 +739,6 @@ const tryMatch = (ctx) => {
 			'Official player url blocked (-460), fallback to provider.'
 		);
 
-		// 优先从请求参数取 id（eapi/linuxapi 等可解密请求体的场景）。
-		// xeapi 请求体由客户端 X25519 会话密钥加密，netease.param 为空，
-		// 此时退化为从已解密响应体 data 中已有的歌曲 id 获取。
 		let id;
 		try {
 			id = Number(
@@ -828,6 +820,7 @@ const tryMatch = (ctx) => {
 					}
 					item.md5 = song.md5 || crypto.md5.digest(song.url);
 					item.br = song.br || 128000;
+					if (song.level) item.level = song.level;
 					item.size = song.size;
 					item.code = 200;
 					item.freeTrialInfo = null;
@@ -848,8 +841,8 @@ const tryMatch = (ctx) => {
 									!aggregation.length
 										? current.map((element) => [element])
 										: aggregation.map((element, index) =>
-												element.concat(current[index])
-											),
+											element.concat(current[index])
+										),
 								[]
 							)
 							.filter((pair) => pair[0] !== pair[1])[0];
